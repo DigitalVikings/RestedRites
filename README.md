@@ -2,14 +2,12 @@
 
 Channel the spirits of fallen beasts through the warmth of your hearth. **RestedRites** transforms mounted trophies into spiritual conduits, weaving their essence directly into your **Rested** status effect when you rest at home.
 
-![Attuning a Mounted Trophy](screenshot_attune_ui.png)
-![Active Rested Status HUD](screenshot_rested_ui.png)
+![Attuning a Mounted Trophy](https://raw.githubusercontent.com/DigitalVikings/RestedRites/main/screenshot_attune_ui.png)
+![Active Rested Status HUD](https://raw.githubusercontent.com/DigitalVikings/RestedRites/main/screenshot_rested_ui.png)
 
-> [!WARNING]
-> **Work in Progress (Pre-Release v0.1.0)**: This mod is in active development and has not been tested extensively. Features, balance, and mechanics may change, and unintended bugs or edge cases may occur. Backup your character and world saves before testing.
+> ⚠️ **Work in Progress (Pre-Release v0.1.0)**: This mod is in active development and has not been tested extensively. Features, balance, and mechanics may change, and unintended bugs or edge cases may occur. Backup your character and world saves before testing.
 
-> [!IMPORTANT]
-> **Powered by VikingLib**: This mod requires [VikingLib](https://valheim.thunderstore.io/package/DigitalVikings/VikingLib/). 
+> ⚡ **Powered by VikingLib**: This mod requires [VikingLib](https://valheim.thunderstore.io/package/DigitalVikings/VikingLib/). 
 > VikingLib replaces Valheim's native combat calculation and stat engines. Not all mods may be compatible / work as expected with this.
 
 ---
