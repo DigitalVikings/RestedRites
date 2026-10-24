@@ -108,6 +108,31 @@ if (Test-Path "$userDotNet\dotnet.exe") {
 
 Push-Location $PSScriptRoot
 try {
+    # Synchronize version across manifest.json (Single Source of Truth), .csproj, and src/Plugin.cs
+    $manifestPath = Join-Path $PSScriptRoot "manifest.json"
+    if (Test-Path $manifestPath) {
+        $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+        $syncVersion = $manifest.version_number
+        $csprojPath = Join-Path $PSScriptRoot "RestedRites.csproj"
+        if (Test-Path $csprojPath) {
+            $csprojRaw = Get-Content $csprojPath -Raw
+            $csprojUpdated = $csprojRaw -replace '<Version>[^<]+</Version>', "<Version>$syncVersion</Version>"
+            if ($csprojRaw -ne $csprojUpdated) {
+                Set-Content -Path $csprojPath -Value $csprojUpdated -NoNewline -Encoding UTF8
+                Write-Host "[VersionSync] Updated RestedRites.csproj -> v$syncVersion" -ForegroundColor Cyan
+            }
+        }
+        $pluginPath = Join-Path $PSScriptRoot "src\Plugin.cs"
+        if (Test-Path $pluginPath) {
+            $pluginRaw = Get-Content $pluginPath -Raw
+            $pluginUpdated = $pluginRaw -replace 'ModVersion\s*=\s*"[^"]+"', "ModVersion = "$syncVersion""
+            if ($pluginRaw -ne $pluginUpdated) {
+                Set-Content -Path $pluginPath -Value $pluginUpdated -NoNewline -Encoding UTF8
+                Write-Host "[VersionSync] Updated src/Plugin.cs -> v$syncVersion" -ForegroundColor Cyan
+            }
+        }
+    }
+
     Write-Host "Building RestedRites [$Configuration]..." -ForegroundColor Cyan
 
     $buildArgs = @("build", "$PSScriptRoot\RestedRites.csproj", "-c", $Configuration)
@@ -165,12 +190,13 @@ try {
         Copy-Item $manifestPath -Destination $stagingDir
         Copy-Item $iconPath -Destination $stagingDir
         Copy-Item $readmePath -Destination $stagingDir
+    Copy-Item $changelogPath -Destination $stagingDir
         Copy-Item $targetDll -Destination $stagingDir
         if (Test-Path $targetPdb) {
             Copy-Item $targetPdb -Destination $stagingDir
         }
 
-            Get-ChildItem -Path $PSScriptRoot -File -Filter "*.png" | Where-Object { $_.Name -ne "icon.png" } | ForEach-Object {
+            Get-ChildItem -Path $PSScriptRoot -File -Filter "*.png" | Where-Object { $_.Name -ne "icon.png" -and $_.Name -ne "icon_raw.png" } | ForEach-Object {
         Copy-Item $_.FullName -Destination $stagingDir
     }
 
