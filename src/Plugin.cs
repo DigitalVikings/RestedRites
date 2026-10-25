@@ -15,7 +15,7 @@ namespace RestedRites
     {
         public const string ModGuid = "com.digitalvikings.restedrites";
         public const string ModName = "RestedRites";
-        public const string ModVersion = "0.1.0";
+        public const string ModVersion = "0.2.0";
 
         internal static ManualLogSource Log = null!;
         private Harmony _harmony = null!;

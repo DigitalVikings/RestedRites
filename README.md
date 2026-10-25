@@ -1,4 +1,4 @@
-﻿# RestedRites
+# RestedRites
 
 Channel the spirits of fallen beasts through the warmth of your hearth. **RestedRites** transforms mounted trophies into spiritual conduits, weaving their essence directly into your **Rested** status effect when you rest at home.
 
