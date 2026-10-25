@@ -79,7 +79,7 @@ namespace RestedRites.Services
                 var entry = activeEntries[i];
                 if (RiteDatabase.TryGetRite(entry.PrefabName, out var rite))
                 {
-                    foreach (var mod in rite.CreateModifiers(player, comfort, OwnerKey))
+                    foreach (var mod in rite.CreateModifiers(player, comfort, i, OwnerKey))
                     {
                         modifiers.Add(mod);
                     }
@@ -121,21 +121,6 @@ namespace RestedRites.Services
                 ctx.AddExtraDamageFromPhysical(DamageType.Fire, 0.15f, "The Plains Tribe (4pc)");
             }
 
-            // Seeker (Chitin Breaker): +Physical Damage vs Resistant Targets
-            if (AttunementManager.TryGetActivePower(player, TrophyId.Seeker, out float seekerBonus) && ctx.Target != null)
-            {
-                var mods = ctx.Target.m_damageModifiers;
-                if (mods.m_blunt == HitData.DamageModifier.Resistant || mods.m_blunt == HitData.DamageModifier.VeryResistant ||
-                    mods.m_slash == HitData.DamageModifier.Resistant || mods.m_slash == HitData.DamageModifier.VeryResistant ||
-                    mods.m_pierce == HitData.DamageModifier.Resistant || mods.m_pierce == HitData.DamageModifier.VeryResistant)
-                {
-                    float factor = seekerBonus * 0.01f;
-                    ctx.AddIncreasedPercent(factor, "Chitin Breaker", DamageType.Blunt);
-                    ctx.AddIncreasedPercent(factor, "Chitin Breaker", DamageType.Slash);
-                    ctx.AddIncreasedPercent(factor, "Chitin Breaker", DamageType.Pierce);
-                }
-            }
-
             // The Charred Duo 2-Piece: +25% Damage with Elemental Arrows
             if (ctx.Hit.m_ranged && AttunementManager.HasActiveSetBonus(player, SetId.TheCharredDuo, 2))
             {
@@ -153,7 +138,7 @@ namespace RestedRites.Services
             // Seeker Soldier (Carapace Ward): 80% Damage Reduction on First Hit (managed via ProcCooldownManager)
             if (AttunementManager.TryGetActivePower(player, TrophyId.SeekerSoldier, out float wardPower))
             {
-                float cd = wardPower > 0.01f ? (90f / wardPower) : 90f;
+                float cd = wardPower > 0.01f ? (75f / wardPower) : 75f;
                 if (ProcCooldownManager.TryTrigger(player, "RestedRites_CarapaceWard", cd, persist: false))
                 {
                     float rawIncoming = ctx.GetTotalDamage();
@@ -259,7 +244,7 @@ namespace RestedRites.Services
             if (target != null && AttunementManager.TryGetActivePower(attacker, TrophyId.Growth, out float tarPower))
             {
                 bool isRanged = ctx.Hit.m_ranged;
-                float chance = isRanged ? tarPower : (tarPower * 0.5f);
+                float chance = isRanged ? tarPower : 40f;
                 if (UnityEngine.Random.Range(0f, 100f) < chance)
                 {
                     DamagePipeline.ApplyOnHitStatus(target, "Tarred", 0f, 8f, attacker);
@@ -271,7 +256,7 @@ namespace RestedRites.Services
             if (target != null && AttunementManager.TryGetActivePower(attacker, TrophyId.FrostBlob, out float frostPower))
             {
                 bool isRanged = ctx.Hit.m_ranged;
-                float chance = isRanged ? frostPower : (frostPower * 0.5f);
+                float chance = isRanged ? frostPower : 40f;
                 if (UnityEngine.Random.Range(0f, 100f) < chance)
                 {
                     DamagePipeline.ApplyOnHitStatus(target, "Frost", 0f, 8f, attacker);
@@ -297,15 +282,10 @@ namespace RestedRites.Services
             int activeSlots = PowerCalculator.GetActiveSlots(comfort);
             int activeCount = isRested ? Math.Min(attunedEntries.Count, activeSlots) : 0;
 
-            float pwrIncrement = ModConfig.PowerIncrement.Value;
-            float totalPower = 1f + (comfort - 1f) * pwrIncrement;
-            float scalingFactor = PowerCalculator.CalculatePowerMultiplier(comfort);
-            float scalingPercent = scalingFactor * 100f;
-
             var rows = new List<(string Label, string FormattedValue)>();
 
             string statusVal = isRested
-                ? $"{activeCount}/{activeSlots} Active ({scalingPercent:0.#}% Power • Comfort {comfort})"
+                ? $"{activeCount}/{activeSlots} Active (Comfort {comfort} • {ModConfig.ProgressionType.Value} Model)"
                 : $"Inactive (Requires Rested • Comfort {comfort})";
 
             rows.Add(("Attunement Status", statusVal));
@@ -316,8 +296,10 @@ namespace RestedRites.Services
                 if (!RiteDatabase.TryGetRite(entry.PrefabName, out TrophyRite rite)) continue;
 
                 bool isActive = isRested && i < activeCount;
-                string desc = isActive ? rite.GetFormattedDescription(comfort) : rite.GetBaseDescription();
-                string tag = isActive ? $"Active ({scalingPercent:0.#}%)" : (isRested ? "Requires Higher Comfort" : "Requires Rested");
+                float slotPct = PowerCalculator.GetSlotPercent(i, comfort);
+                string slotName = i == 0 ? "Anchor" : $"Slot {i + 1}";
+                string desc = isActive ? rite.GetFormattedDescription(comfort, i) : rite.GetBaseDescription();
+                string tag = isActive ? $"{slotName} ({slotPct:0.#}%)" : (isRested ? "Requires Higher Comfort" : "Requires Rested");
 
                 rows.Add(($"• {rite.DisplayName} ({rite.CreatureName})", $"{desc} [{tag}]"));
             }

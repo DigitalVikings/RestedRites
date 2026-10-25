@@ -226,14 +226,27 @@ namespace RestedRites.Patches
                 rested.m_healthRegenMultiplier = ModConfig.BaselineHealthRegen.Value;
                 rested.m_staminaRegenMultiplier = ModConfig.BaselineStaminaRegen.Value;
                 rested.m_eitrRegenMultiplier = ModConfig.BaselineEitrRegen.Value;
-                rested.m_raiseSkill = Skills.SkillType.All;
-                rested.m_raiseSkillModifier = ModConfig.BaselineSkillXP.Value - 1f;
             }
             else
             {
                 rested.m_healthRegenMultiplier = 1.0f;
                 rested.m_staminaRegenMultiplier = 1.0f;
                 rested.m_eitrRegenMultiplier = 1.0f;
+            }
+
+            // Dvergr's Wisdom or Baseline Skill XP
+            if (AttunementManager.TryGetActivePower(player, TrophyId.Dvergr, out float dvergrXpBonus))
+            {
+                rested.m_raiseSkill = Skills.SkillType.All;
+                rested.m_raiseSkillModifier = dvergrXpBonus * 0.01f;
+            }
+            else if (ModConfig.EnableBaselineRestedBuff.Value)
+            {
+                rested.m_raiseSkill = Skills.SkillType.All;
+                rested.m_raiseSkillModifier = ModConfig.BaselineSkillXP.Value - 1f;
+            }
+            else
+            {
                 rested.m_raiseSkill = Skills.SkillType.None;
                 rested.m_raiseSkillModifier = 0.0f;
             }

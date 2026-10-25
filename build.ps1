@@ -125,7 +125,7 @@ try {
         $pluginPath = Join-Path $PSScriptRoot "src\Plugin.cs"
         if (Test-Path $pluginPath) {
             $pluginRaw = Get-Content $pluginPath -Raw
-            $pluginUpdated = $pluginRaw -replace 'ModVersion\s*=\s*"[^"]+"', "ModVersion = "$syncVersion""
+            $pluginUpdated = $pluginRaw -replace 'ModVersion\s*=\s*"[^"]+"', "ModVersion = `"$syncVersion`""
             if ($pluginRaw -ne $pluginUpdated) {
                 Set-Content -Path $pluginPath -Value $pluginUpdated -NoNewline -Encoding UTF8
                 Write-Host "[VersionSync] Updated src/Plugin.cs -> v$syncVersion" -ForegroundColor Cyan
@@ -149,20 +149,50 @@ try {
 
     Write-Host "Build and deployment completed successfully!" -ForegroundColor Green
 
+    # Compose CHANGELOG.md from changelogs/v*.md if changelogs directory exists
+    $changelogsDir = Join-Path $PSScriptRoot "changelogs"
+    $changelogPath = Join-Path $PSScriptRoot "CHANGELOG.md"
+    if (Test-Path $changelogsDir) {
+        $modDisplayName = if ($manifest) { $manifest.name } else { (Get-Item $PSScriptRoot).Name }
+        $logHeader = "# Changelog`n`nAll notable changes to **$modDisplayName** will be documented in this file.`n"
+        $versionFiles = @(Get-ChildItem -Path $changelogsDir -Filter "v*.md" | ForEach-Object {
+            if ($_.BaseName -match '^v?(\d+\.\d+\.\d+.*)$') {
+                [PSCustomObject]@{
+                    File = $_
+                    Version = [version]($matches[1].Split('-')[0])
+                    Raw = Get-Content $_.FullName -Raw
+                }
+            }
+        } | Sort-Object -Property Version -Descending)
+        if ($versionFiles.Count -gt 0) {
+            $composed = $logHeader + "`n" + (($versionFiles | ForEach-Object { $_.Raw.Trim() }) -join "`n`n") + "`n"
+            [System.IO.File]::WriteAllText($changelogPath, $composed, [System.Text.Encoding]::UTF8)
+            Write-Host "[Changelog] Composed root CHANGELOG.md from $($versionFiles.Count) version fragment(s)." -ForegroundColor Cyan
+        }
+    }
+
     if ($Package) {
         Write-Host "Packaging Thunderstore release zip..." -ForegroundColor Cyan
         
         $manifestPath = Join-Path $PSScriptRoot "manifest.json"
         $iconPath = Join-Path $PSScriptRoot "icon.png"
         $readmePath = Join-Path $PSScriptRoot "README.md"
+        $changelogPath = Join-Path $PSScriptRoot "CHANGELOG.md"
         
         if (-not (Test-Path $manifestPath)) { throw "Missing manifest.json" }
         if (-not (Test-Path $iconPath)) { throw "Missing icon.png" }
         if (-not (Test-Path $readmePath)) { throw "Missing README.md" }
+        if (-not (Test-Path $changelogPath)) { throw "Missing CHANGELOG.md" }
 
         $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
         $version = $manifest.version_number
         $modName = $manifest.name
+
+        $changelogContent = Get-Content $changelogPath -Raw
+        $versionHeaderRegex = "##\s*\[" + [regex]::Escape($version) + "\]"
+        if ($changelogContent -notmatch $versionHeaderRegex) {
+            throw "CHANGELOG.md is missing an entry for version [$version]. Reverse chronological order required."
+        }
 
         $targetDll = Join-Path $PSScriptRoot "bin\$Configuration\netstandard2.1\$modName.dll"
         $targetPdb = Join-Path $PSScriptRoot "bin\$Configuration\netstandard2.1\$modName.pdb"

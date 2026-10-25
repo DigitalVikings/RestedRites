@@ -40,17 +40,15 @@ namespace RestedRites.Services
 
         public static int GetRequiredComfortForSlot(int slotIndex)
         {
-            int[] checkpoints = {
-                ModConfig.Checkpoint1.Value,
-                ModConfig.Checkpoint2.Value,
-                ModConfig.Checkpoint3.Value,
-                ModConfig.Checkpoint4.Value
-            };
-            Array.Sort(checkpoints);
-
-            if (slotIndex < 0) return checkpoints[0];
-            if (slotIndex < checkpoints.Length) return checkpoints[slotIndex];
-            return checkpoints[checkpoints.Length - 1];
+            if (slotIndex <= 0) return 1;
+            for (int c = 1; c <= PowerCalculator.MaxComfortLevels; c++)
+            {
+                if (PowerCalculator.GetSlotPercent(slotIndex, c) > 0.001f)
+                {
+                    return c;
+                }
+            }
+            return 24;
         }
 
         public static List<AttunedEntry> GetAttunedEntries(Player player)
@@ -129,11 +127,12 @@ namespace RestedRites.Services
             var activeEntries = GetActiveEntries(player, playerComfort);
             if (activeEntries.Count == 0) return false;
 
-            foreach (var entry in activeEntries)
+            for (int i = 0; i < activeEntries.Count; i++)
             {
+                var entry = activeEntries[i];
                 if (RiteDatabase.TryGetRite(entry.PrefabName, out TrophyRite rite) && rite.Id == id)
                 {
-                    power = PowerCalculator.CalculatePower(rite.BaseMagnitude, playerComfort);
+                    power = PowerCalculator.CalculatePower(rite.BaseMagnitude, playerComfort, i);
                     return true;
                 }
             }
@@ -240,12 +239,9 @@ namespace RestedRites.Services
             var entries = GetAttunedEntries(player);
             int activeSlots = GetMaxSlots(playerComfort);
             int activeCount = Math.Min(entries.Count, activeSlots);
-            float pwrIncrement = ModConfig.PowerIncrement.Value;
-            float totalPower = 1f + (playerComfort - 1f) * pwrIncrement;
-            float scalingPercent = activeSlots > 0 ? (totalPower / activeSlots) * 100f * ModConfig.CommonScalingFactor.Value : 0f;
 
             var sb = new StringBuilder();
-            sb.Append($"\n\n<color=#FFD700><b>Attuned Rites ({activeCount}/{activeSlots} Active • {scalingPercent:0.#}% Power Scaling, {entries.Count}/{MaxStoredTrophies} Stored):</b></color>");
+            sb.Append($"\n\n<color=#FFD700><b>Attuned Rites ({activeCount}/{activeSlots} Active • Comfort {playerComfort}, {entries.Count}/{MaxStoredTrophies} Stored):</b></color>");
 
             if (entries.Count == 0)
             {
@@ -257,21 +253,26 @@ namespace RestedRites.Services
             for (int i = 0; i < activeCount; i++)
             {
                 var entry = entries[i];
+                float pct = PowerCalculator.GetSlotPercent(i, playerComfort);
+                string slotTag = i == 0 ? "Anchor" : $"Slot {i + 1}";
+
                 if (RiteDatabase.TryGetRite(entry.PrefabName, out TrophyRite rite))
                 {
-                    string bonus = rite.GetFormattedDescription(playerComfort);
-                    sb.Append($"\n• <color=#00FFFF>{rite.DisplayName}</color> ({rite.CreatureName}): <color=#80FF80>{bonus}</color>");
+                    string bonus = rite.GetFormattedDescription(playerComfort, i);
+                    sb.Append($"\n• <color=#00FFFF>{rite.DisplayName}</color> ({rite.CreatureName}) <color=#FFD700>[{slotTag}: {pct:0.#}%]</color>: <color=#80FF80>{bonus}</color>");
                 }
                 else
                 {
-                    sb.Append($"\n• <color=#00FFFF>{entry.PrefabName}</color>: <color=#80FF80>Active</color>");
+                    sb.Append($"\n• <color=#00FFFF>{entry.PrefabName}</color> <color=#FFD700>[{slotTag}: {pct:0.#}%]</color>: <color=#80FF80>Active</color>");
                 }
             }
 
             // Empty active slots
             for (int i = activeCount; i < activeSlots; i++)
             {
-                sb.Append($"\n<color=#80FF80>• Slot {i + 1}: Empty (Mount trophy & Shift+E to attune)</color>");
+                float emptyPct = PowerCalculator.GetSlotPercent(i, playerComfort);
+                string emptyTag = i == 0 ? "Anchor" : $"Slot {i + 1}";
+                sb.Append($"\n<color=#80FF80>• {emptyTag} ({emptyPct:0.#}% Power): Empty (Mount trophy & Shift+E to attune)</color>");
             }
 
             // Inactive (stored) entries

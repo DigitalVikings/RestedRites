@@ -31,9 +31,9 @@ namespace RestedRites.Rites
                 SetId.PioneersOfTheWilds,
                 "Pioneers of the Wilds",
                 new[] { TrophyId.Boar, TrophyId.Deer, TrophyId.Neck, TrophyId.Hare },
-                twoPieceBonus: "+10% Sprint Stamina Efficiency when carry weight is below 50%",
+                twoPieceBonus: "+15% Sprint Stamina Efficiency when carry weight is below 50%",
                 twoPieceModifiers: (p, owner) => new[] {
-                    StatModifier.Increased(CharacterStats.SprintEfficiency, 0.10f, "Pioneers of the Wilds (2pc)",
+                    StatModifier.Increased(CharacterStats.SprintEfficiency, 0.15f, "Pioneers of the Wilds (2pc)",
                         c => c is Player player && player.GetInventory().GetTotalWeight() < player.GetMaxCarryWeight() * 0.5f, owner)
                 },
                 threePieceBonus: "+5% Double gather & drop roll yield",
@@ -70,9 +70,9 @@ namespace RestedRites.Rites
                 SetId.TheEarthshakers,
                 "The Earthshakers",
                 new[] { TrophyId.Troll, TrophyId.StoneGolem, TrophyId.Morgen, TrophyId.JotunnWarrior },
-                twoPieceBonus: "+30% Pickaxe damage to rocks, ore deposits, and barriers",
+                twoPieceBonus: "+40% Pickaxe damage to rocks, ore deposits, and barriers",
                 twoPieceModifiers: (p, owner) => new[] {
-                    StatModifier.Increased(CharacterStats.DamagePickaxe, 0.30f, "The Earthshakers (2pc)", null, owner)
+                    StatModifier.Increased(CharacterStats.DamagePickaxe, 0.40f, "The Earthshakers (2pc)", null, owner)
                 },
                 threePieceBonus: "+25% Knockback force dealt & stagger power",
                 threePieceModifiers: (p, owner) => new[] {
@@ -93,9 +93,9 @@ namespace RestedRites.Rites
                 twoPieceModifiers: (p, owner) => new[] {
                     StatModifier.Increased(CharacterStats.DamageAgainstAfflicted, 0.25f, "The Plains Tribe (2pc)", null, owner)
                 },
-                threePieceBonus: "+15 Max Stamina & +20% Dodge Stamina Efficiency",
+                threePieceBonus: "+25 Max Stamina & +20% Dodge Stamina Efficiency",
                 threePieceModifiers: (p, owner) => new[] {
-                    StatModifier.Flat(CharacterStats.MaxStamina, 15f, "The Plains Tribe (3pc)", null, owner),
+                    StatModifier.Flat(CharacterStats.MaxStamina, 25f, "The Plains Tribe (3pc)", null, owner),
                     StatModifier.Increased(CharacterStats.DodgeEfficiency, 0.20f, "The Plains Tribe (3pc)", null, owner)
                 },
                 fourPieceBonus: "Adds +15% Fire damage to all physical damage dealt"
@@ -132,9 +132,9 @@ namespace RestedRites.Rites
                     StatModifier.Increased(CharacterStats.EitrRegen, 0.15f, "Weavers of Eitr (2pc)", null, owner),
                     StatModifier.Increased(CharacterStats.AttackEitrEfficiency, 0.10f, "Weavers of Eitr (2pc)", null, owner)
                 },
-                threePieceBonus: "+20 Max Eitr",
+                threePieceBonus: "+30 Max Eitr",
                 threePieceModifiers: (p, owner) => new[] {
-                    StatModifier.Flat(CharacterStats.MaxEitr, 20f, "Weavers of Eitr (3pc)", null, owner)
+                    StatModifier.Flat(CharacterStats.MaxEitr, 30f, "Weavers of Eitr (3pc)", null, owner)
                 },
                 fourPieceBonus: "+25% Spell Eitr Efficiency",
                 fourPieceModifiers: (p, owner) => new[] {
@@ -196,9 +196,9 @@ namespace RestedRites.Rites
                 SetId.TheHiveChitin,
                 "The Hive Chitin",
                 new[] { TrophyId.Seeker, TrophyId.SeekerSoldier, TrophyId.Tick },
-                twoPieceBonus: "+10 Base Armor",
+                twoPieceBonus: "+15 Base Armor",
                 twoPieceModifiers: (p, owner) => new[] {
-                    StatModifier.Flat(CharacterStats.BodyArmor, 10f, "The Hive Chitin (2pc)", null, owner)
+                    StatModifier.Flat(CharacterStats.BodyArmor, 15f, "The Hive Chitin (2pc)", null, owner)
                 },
                 threePieceBonus: "Carapace Counter: Reflect 50% damage when Carapace Ward triggers"
                 // Handled via DamagePipeline.OnHitTaken
@@ -208,9 +208,9 @@ namespace RestedRites.Rites
                 SetId.UndergroundDelvers,
                 "Underground Delvers",
                 new[] { TrophyId.Dvergr, TrophyId.Mole, TrophyId.Barka },
-                twoPieceBonus: "+75% Tool and Weapon Durability Efficiency",
+                twoPieceBonus: "+100% Tool and Weapon Durability Efficiency",
                 twoPieceModifiers: (p, owner) => new[] {
-                    StatModifier.Increased(CharacterStats.DurabilityEfficiency, 0.75f, "Underground Delvers (2pc)", null, owner)
+                    StatModifier.Increased(CharacterStats.DurabilityEfficiency, 1.00f, "Underground Delvers (2pc)", null, owner)
                 },
                 threePieceBonus: "+20% Mining yield & +10 Armor in caves and crypts",
                 threePieceModifiers: (p, owner) => new[] {

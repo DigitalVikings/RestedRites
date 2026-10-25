@@ -43,24 +43,24 @@ namespace RestedRites.Rites
             AlternatePrefabs = alternatePrefabs ?? Array.Empty<string>();
         }
 
-        public float GetCalculatedMagnitude(int playerComfort)
+        public float GetCalculatedMagnitude(int playerComfort, int slotIndex = 0)
         {
-            return PowerCalculator.CalculatePower(BaseMagnitude, playerComfort);
+            return PowerCalculator.CalculatePower(BaseMagnitude, playerComfort, slotIndex);
         }
 
-        public string GetFormattedDescription(int playerComfort)
+        public string GetFormattedDescription(int playerComfort, int slotIndex = 0)
         {
             if (Id == TrophyId.SeekerSoldier)
             {
-                float p = GetCalculatedMagnitude(playerComfort);
-                float cd = p > 0.01f ? 90f / p : 90f;
+                float p = GetCalculatedMagnitude(playerComfort, slotIndex);
+                float cd = p > 0.01f ? 75f / p : 75f;
                 return string.Format(DescriptionFormat, cd.ToString("F0"), StatUnit);
             }
             if (Id == TrophyId.Abomination)
             {
                 return string.Format(DescriptionFormat, "1", StatUnit);
             }
-            float scaled = GetCalculatedMagnitude(playerComfort);
+            float scaled = GetCalculatedMagnitude(playerComfort, slotIndex);
             string formattedValue = scaled >= 10f ? Math.Round(scaled).ToString("F0") : scaled.ToString("F1");
             return string.Format(DescriptionFormat, formattedValue, StatUnit);
         }
@@ -69,7 +69,7 @@ namespace RestedRites.Rites
         {
             if (Id == TrophyId.SeekerSoldier)
             {
-                return string.Format(DescriptionFormat, "90", StatUnit);
+                return string.Format(DescriptionFormat, "75", StatUnit);
             }
             float val = BaseMagnitude;
             string formattedValue = val >= 10f ? Math.Round(val).ToString("F0") : val.ToString("F1");
@@ -78,8 +78,13 @@ namespace RestedRites.Rites
 
         public IEnumerable<StatModifier> CreateModifiers(Player player, int playerComfort, object owner)
         {
+            return CreateModifiers(player, playerComfort, 0, owner);
+        }
+
+        public IEnumerable<StatModifier> CreateModifiers(Player player, int playerComfort, int slotIndex, object owner)
+        {
             if (ModifierFactory == null) yield break;
-            float power = GetCalculatedMagnitude(playerComfort);
+            float power = GetCalculatedMagnitude(playerComfort, slotIndex);
             foreach (var mod in ModifierFactory(player, power, owner))
             {
                 yield return mod;

@@ -28,6 +28,9 @@ namespace RestedRites
             // Initialize configuration
             ModConfig.Init(Config);
 
+            // Initialize PowerCalculator 24x4 table
+            RestedRites.Rites.PowerCalculator.Initialize();
+
             // Initialize VikingLib adapter and pipeline subscriptions
             RestedRites.Services.RestedRitesStatAdapter.Init();
 
@@ -46,7 +49,8 @@ namespace RestedRites
         {
             Jotunn.Managers.SynchronizationManager.OnConfigurationSynchronized += (sender, args) =>
             {
-                Log.LogInfo("Server configuration synchronized successfully. Reapplying active Rested Rites modifiers...");
+                Log.LogInfo("Server configuration synchronized successfully. Reloading power table and reapplying active Rested Rites modifiers...");
+                RestedRites.Rites.PowerCalculator.ReloadTable();
                 SERestedPatch.ReapplyCustomModifiers(Player.m_localPlayer);
             };
         }
