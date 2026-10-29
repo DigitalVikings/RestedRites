@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using HarmonyLib;
 using RestedRites.Configuration;
@@ -75,17 +76,8 @@ namespace RestedRites.Patches
 
             // Line 3: [Shift + E] Attune / Attuned: BUFF_NAME
             var attunedList = AttunementManager.GetAttunedEntries(player);
-            int existingIndex = attunedList.FindIndex(e => string.Equals(e.PrefabName, rite.PrefabName, StringComparison.OrdinalIgnoreCase));
-            bool isAttuned = existingIndex >= 0;
-            string slotLabel = existingIndex switch
-            {
-                0 => "Anchor",
-                1 => "Slot 2",
-                2 => "Slot 3",
-                3 => "Slot 4",
-                _ => "New Anchor"
-            };
-            string action = isAttuned ? $"Attuned ({slotLabel})" : "Attune as Anchor";
+            bool isAttuned = attunedList.Any(e => string.Equals(e.PrefabName, rite.PrefabName, StringComparison.OrdinalIgnoreCase));
+            string action = isAttuned ? "Attuned" : "Attune";
             sb.Append($"\n[<color=yellow><b>Shift + E</b></color>] {action}: <color=#00FFFF>{rite.DisplayName}</color>");
 
             // Line 4: Rite: BUFF_DESCRIPTION (base unscaled power)

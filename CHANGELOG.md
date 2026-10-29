@@ -2,6 +2,12 @@
 
 All notable changes to **RestedRites** will be documented in this file.
 
+## [0.2.1] - 2026-10-29
+
+### Changed
+- **Streamlined Attunement Prompts**: Simplified item stand hover prompts to clean "Attune / Attuned" actions with instant visual feedback.
+- **Compendium Stats Tab Overhaul**: Dedicated formatting per trophy set synergy tier and distinct grayed-out styling for inactive or dormant rites.
+
 ## [0.2.0] - 2026-10-25
 
 ### Added

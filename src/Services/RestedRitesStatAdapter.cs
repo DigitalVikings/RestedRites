@@ -290,36 +290,96 @@ namespace RestedRites.Services
 
             rows.Add(("Attunement Status", statusVal));
 
-            for (int i = 0; i < attunedEntries.Count; i++)
+            // 1. Active Rites
+            if (activeCount > 0)
             {
-                var entry = attunedEntries[i];
-                if (!RiteDatabase.TryGetRite(entry.PrefabName, out TrophyRite rite)) continue;
+                rows.Add(("<color=#FFD700><b>Active Rites:</b></color>", string.Empty));
+                for (int i = 0; i < activeCount; i++)
+                {
+                    var entry = attunedEntries[i];
+                    if (!RiteDatabase.TryGetRite(entry.PrefabName, out TrophyRite rite)) continue;
 
-                bool isActive = isRested && i < activeCount;
-                float slotPct = PowerCalculator.GetSlotPercent(i, comfort);
-                string slotName = i == 0 ? "Anchor" : $"Slot {i + 1}";
-                string desc = isActive ? rite.GetFormattedDescription(comfort, i) : rite.GetBaseDescription();
-                string tag = isActive ? $"{slotName} ({slotPct:0.#}%)" : (isRested ? "Requires Higher Comfort" : "Requires Rested");
+                    float slotPct = PowerCalculator.GetSlotPercent(i, comfort);
+                    string slotName = i == 0 ? "Anchor" : $"Slot {i + 1}";
+                    string desc = rite.GetFormattedDescription(comfort, i);
 
-                rows.Add(($"• {rite.DisplayName} ({rite.CreatureName})", $"{desc} [{tag}]"));
+                    rows.Add(($"• <color=#00FFFF>{rite.DisplayName}</color> ({rite.CreatureName}) <color=#FFD700>[{slotName}: {slotPct:0.#}%]</color>", desc));
+                }
             }
 
-            if (isRested)
+            // 2. Inactive / Stored Rites (grayed out completely)
+            int inactiveCount = attunedEntries.Count - activeCount;
+            if (inactiveCount > 0)
+            {
+                string inactiveHeader = isRested
+                    ? "<color=#808080><b>Inactive Rites (Requires Higher Comfort):</b></color>"
+                    : "<color=#808080><b>Inactive Rites (Requires Rested):</b></color>";
+
+                rows.Add((inactiveHeader, string.Empty));
+
+                for (int i = activeCount; i < attunedEntries.Count; i++)
+                {
+                    var entry = attunedEntries[i];
+                    if (!RiteDatabase.TryGetRite(entry.PrefabName, out TrophyRite rite)) continue;
+
+                    string reason = isRested
+                        ? $"Slot {i + 1} • Requires Comfort {AttunementManager.GetRequiredComfortForSlot(i)}"
+                        : (i < activeSlots ? $"Slot {i + 1} • Requires Rested" : $"Slot {i + 1} • Requires Rested & Comfort {AttunementManager.GetRequiredComfortForSlot(i)}");
+
+                    string desc = rite.GetBaseDescription();
+                    rows.Add(($"<color=#757575>• {rite.DisplayName} ({rite.CreatureName}) [{reason}]: {desc}</color>", string.Empty));
+                }
+            }
+
+            // 3. Set Synergies (separate line per bonus)
+            if (isRested && activeCount > 0)
             {
                 var activeSetCounts = AttunementManager.GetActiveSetCounts(player);
+                bool hasSetHeader = false;
+
                 foreach (var kvp in activeSetCounts)
                 {
                     if (SetDatabase.TryGetSet(kvp.Key, out TrophySet set))
                     {
                         int pieces = kvp.Value;
-                        var bonuses = new List<string>();
-                        if (pieces >= 2 && set.TwoPieceBonus != null) bonuses.Add($"(2) {set.TwoPieceBonus}");
-                        if (pieces >= 3 && set.ThreePieceBonus != null) bonuses.Add($"(3) {set.ThreePieceBonus}");
-                        if (pieces >= 4 && set.FourPieceBonus != null) bonuses.Add($"(4) {set.FourPieceBonus}");
-
-                        if (bonuses.Count > 0)
+                        if (pieces >= 2)
                         {
-                            rows.Add(($"• Set: {set.Name} ({pieces}/{set.Members.Length})", string.Join(" | ", bonuses)));
+                            if (!hasSetHeader)
+                            {
+                                rows.Add(("<color=#FFD700><b>Active Set Synergies:</b></color>", string.Empty));
+                                hasSetHeader = true;
+                            }
+
+                            rows.Add(($"• <color=#00FFFF>{set.Name}</color> ({pieces}/{set.Members.Length} Pieces)", string.Empty));
+
+                            if (set.TwoPieceBonus != null)
+                            {
+                                rows.Add(("    (2pc) Bonus", set.TwoPieceBonus));
+                            }
+
+                            if (set.ThreePieceBonus != null)
+                            {
+                                if (pieces >= 3)
+                                {
+                                    rows.Add(("    (3pc) Bonus", set.ThreePieceBonus));
+                                }
+                                else
+                                {
+                                    rows.Add(($"<color=#757575>    (3pc) Bonus: {set.ThreePieceBonus} [Requires 3]</color>", string.Empty));
+                                }
+                            }
+
+                            if (set.FourPieceBonus != null)
+                            {
+                                if (pieces >= 4)
+                                {
+                                    rows.Add(("    (4pc) Bonus", set.FourPieceBonus));
+                                }
+                                else
+                                {
+                                    rows.Add(($"<color=#757575>    (4pc) Bonus: {set.FourPieceBonus} [Requires 4]</color>", string.Empty));
+                                }
+                            }
                         }
                     }
                 }
